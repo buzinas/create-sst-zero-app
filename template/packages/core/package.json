@@ -1,0 +1,25 @@
+{
+  "name": "@app/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./*.tsx": "./src/*.tsx"
+  },
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@rocicorp/zero": "^0.25.12",
+    "drizzle-orm": "^0.45.1",
+    "drizzle-zero": "^0.17.3",
+    "postgres": "^3.4.8"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.8"
+  }
+}

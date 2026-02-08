@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+
+# Turbo
+.turbo
+
+# Environment variables
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# SST
+.sst/
+
+# React Router
+packages/web/.react-router/
+packages/web/build/
+
+# Test coverage
+coverage/
+
+# Misc
+*.log

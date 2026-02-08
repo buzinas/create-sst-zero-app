@@ -1,0 +1,32 @@
+{
+  "name": "@app/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "test": "vitest",
+    "typecheck": "react-router typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@app/core": "workspace:*",
+    "@react-router/node": "^7.13.0",
+    "@rocicorp/zero": "^0.25.12",
+    "isbot": "^5",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router": "^7.13.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.13.0",
+    "@tailwindcss/vite": "^4.1.13",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "^28.0.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.0-beta.13"
+  }
+}

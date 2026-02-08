@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-1
+  # TODO: Fill after running: npx sst deploy --stage dev --config sst.dev.config.ts
+  DB_MANAGER_FUNCTION: TODO:DB_MANAGER_FUNCTION
+
+jobs:
+  ci:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm i
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test:run
+
+  deploy-production:
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.TODO:DOMAIN
+    env: &deploy-env
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      ZERO_ADMIN_PASSWORD: ${{ secrets.ZERO_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm i
+      - name: Patch SST (sst/sst#6360)
+        run: ./scripts/patch-sst.sh
+      - run: npx sst deploy --stage production
+
+  deploy-preview:
+    needs: ci
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: https://pr-${{ github.event.pull_request.number }}-app.TODO:DOMAIN
+    env: *deploy-env
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm i
+      - name: Create preview database
+        run: |
+          aws lambda invoke \
+            --function-name $DB_MANAGER_FUNCTION \
+            --payload '{"action":"create","database":"zero_app_pr_${{ github.event.pull_request.number }}"}' \
+            --cli-binary-format raw-in-base64-out \
+            --region $AWS_REGION \
+            /dev/null
+      - name: Patch SST (sst/sst#6360)
+        run: ./scripts/patch-sst.sh
+      - run: npx sst deploy --stage pr-${{ github.event.pull_request.number }} --config sst.preview.config.ts
+
+  cleanup:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    env: *deploy-env
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm i
+      - name: Patch SST (sst/sst#6360)
+        run: ./scripts/patch-sst.sh
+      - run: npx sst remove --stage pr-${{ github.event.pull_request.number }} --config sst.preview.config.ts
+      - name: Drop preview database
+        run: |
+          aws lambda invoke \
+            --function-name $DB_MANAGER_FUNCTION \
+            --payload '{"action":"drop","database":"zero_app_pr_${{ github.event.pull_request.number }}"}' \
+            --cli-binary-format raw-in-base64-out \
+            --region $AWS_REGION \
+            /dev/null

@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "experimentalSortImports": {
+    "groups": [
+      "type-import",
+      ["value-builtin", "value-external"],
+      "type-internal",
+      "value-internal",
+      ["type-parent", "type-sibling", "type-index"],
+      ["value-parent", "value-sibling", "value-index"],
+      "side-effect",
+      "unknown"
+    ],
+    "internalPattern": ["~/", "@app/"],
+    "newlinesBetween": true
+  },
+  "experimentalSortPackageJson": false,
+  "experimentalTailwindcss": {},
+  "ignorePatterns": [
+    "node_modules",
+    "build",
+    "dist",
+    ".sst",
+    "sst-env.d.ts",
+    "_journal.json",
+    ".react-router",
+    "pnpm-lock.yaml"
+  ]
+}
